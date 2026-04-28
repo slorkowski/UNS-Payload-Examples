@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opcfoundation.org/UA/Machinery/MonitoringStatusState/v1.0",
+  "title": "OPC UA Monitoring Status State",
+  "description": "JSON Schema for monitoring status MachineryItemState based on OPC UA Machinery v1.04. Simplified for MQTT payload use.",
+  "type": "object",
+  "required": ["currentState"],
+  "properties": {
+    "currentState": {
+      "type": "string",
+      "description": "The current state of the MachineryItemState (e.g., 'Running', 'Stopped', 'Idle', Blocked, Starved, etc. OR Not Available if the state cannot be determined or is Not Available, Executing, Not Executing, Out of Service.)"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "localizedText": {
+      "description": "Text with optional locale information. Can be a simple string or an object with locale and text properties.",
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "required": ["text"],
+          "properties": {
+            "locale": {
+              "type": "string",
+              "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+              "description": "BCP 47 language tag (e.g., 'en', 'en-US', 'de-DE')"
+            },
+            "text": {
+              "type": "string",
+              "description": "The localized text value"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["text"],
+            "properties": {
+              "locale": {
+                "type": "string",
+                "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+                "description": "BCP 47 language tag (e.g., 'en', 'en-US', 'de-DE')"
+              },
+              "text": {
+                "type": "string",
+                "description": "The localized text value"
+              }
+            },
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "description": "Array of localized text values for multiple languages"
+        }
+      ]
+    }
+  }
+}

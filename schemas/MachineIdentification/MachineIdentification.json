@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opcfoundation.org/UA/Machinery/MachineIdentification/v1.0",
+  "title": "OPC UA Machine Identification",
+  "description": "JSON Schema for machine identification based on OPC UA Machinery v1.02 (IMachineVendorNameplateType and IMachineTagNameplateType). Simplified for MQTT payload use.",
+  "type": "object",
+  "required": ["manufacturer", "serialNumber", "productInstanceUri", "model"],
+  "properties": {
+    "manufacturer": {
+      "$ref": "#/$defs/localizedText",
+      "description": "Name of the company that manufactured the machine (vendor-provided, read-only)"
+    },
+    "serialNumber": {
+      "type": "string",
+      "description": "Unique production number assigned by the manufacturer (vendor-provided, read-only)"
+    },
+    "productInstanceUri": {
+      "type": "string",
+      "format": "uri",
+      "description": "Globally unique identifier for this specific machine instance. Typically a URI combining manufacturer domain and serial number (vendor-provided, read-only)"
+    },
+    "manufacturerUri": {
+      "type": "string",
+      "format": "uri",
+      "description": "URI identifying the manufacturer, typically the company's domain (vendor-provided, read-only)"
+    },
+    "model": {
+      "$ref": "#/$defs/localizedText",
+      "description": "Model name or designation of the machine (vendor-provided, read-only)"
+    },
+    "productCode": {
+      "type": "string",
+      "description": "Manufacturer's product code or catalog number (vendor-provided, read-only)"
+    },
+    "hardwareRevision": {
+      "type": "string",
+      "description": "Hardware revision level of the machine (vendor-provided, read-only)"
+    },
+    "softwareRevision": {
+      "type": "string",
+      "description": "Software/firmware revision level (vendor-provided, read-only)"
+    },
+    "deviceClass": {
+      "type": "string",
+      "description": "Classification of the device type according to industry standards (vendor-provided, read-only)"
+    },
+    "yearOfConstruction": {
+      "type": "integer",
+      "minimum": 1900,
+      "maximum": 2100,
+      "description": "Year when the machine was manufactured (vendor-provided, read-only)"
+    },
+    "monthOfConstruction": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 12,
+      "description": "Month when the machine was manufactured (vendor-provided, read-only)"
+    },
+    "initialOperationDate": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date when the machine was first put into operation (vendor-provided, read-only)"
+    },
+    "assetId": {
+      "type": "string",
+      "description": "Customer-defined identifier for the asset within their organization (user-configurable)"
+    },
+    "componentName": {
+      "$ref": "#/$defs/localizedText",
+      "description": "User-assigned name for the machine in the plant context (user-configurable)"
+    },
+    "location": {
+      "type": "string",
+      "description": "Physical location of the machine, such as plant area or building (user-configurable)"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "localizedText": {
+      "description": "Text with optional locale information. Can be a simple string or an object with locale and text properties.",
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "required": ["text"],
+          "properties": {
+            "locale": {
+              "type": "string",
+              "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+              "description": "BCP 47 language tag (e.g., 'en', 'en-US', 'de-DE')"
+            },
+            "text": {
+              "type": "string",
+              "description": "The localized text value"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["text"],
+            "properties": {
+              "locale": {
+                "type": "string",
+                "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+                "description": "BCP 47 language tag (e.g., 'en', 'en-US', 'de-DE')"
+              },
+              "text": {
+                "type": "string",
+                "description": "The localized text value"
+              }
+            },
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "description": "Array of localized text values for multiple languages"
+        }
+      ]
+    }
+  }
+}

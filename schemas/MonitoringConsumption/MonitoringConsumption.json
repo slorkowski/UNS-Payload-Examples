@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opcfoundation.org/UA/Machinery/EnergyMeasurementType/v1.0",
+  "title": "OPC UA Machinery Energy Measurement Type",
+  "description": "JSON Schema for monitoring consumption Energy Management Type based on OPC UA Machinery v1.04 and Energy Management Consumption v1.0. Simplified for MQTT payload use.",
+  "type": "object",
+  "required": ["resource", "applicationTag", "accuracyClass"],
+  "properties": {
+    "applicationTag": {
+      "type": "string",
+      "description": "Identifier for the application or context of the measurement"
+    },
+    "resource": {
+      "type": "number",
+      "minimum": 0,
+      "description": "defines the measured resource. This specification defines standardized values for resources (see Table 40). The numbers 0 to 128 are reserved for this specification. Vendors may use values larger 128 for their own defined resources."
+    },
+      "accuracyClass": {
+      "type": "number",
+      "minimum": 0,
+      "description": "defines the accuracy, in which the energy measurement value is provided"
+    },
+      "measurementValue": {
+      "type": "number",
+      "minimum": 0,
+      "description": "The actual energy measurement value"
+    },
+    "unit": {
+      "type": "string",
+      "description": "The unit of measurement for the energy value"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "localizedText": {
+      "description": "Text with optional locale information. Can be a simple string or an object with locale and text properties.",
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "required": ["text"],
+          "properties": {
+            "locale": {
+              "type": "string",
+              "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+              "description": "BCP 47 language tag (e.g., 'en', 'en-US', 'de-DE')"
+            },
+            "text": {
+              "type": "string",
+              "description": "The localized text value"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["text"],
+            "properties": {
+              "locale": {
+                "type": "string",
+                "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+                "description": "BCP 47 language tag (e.g., 'en', 'en-US', 'de-DE')"
+              },
+              "text": {
+                "type": "string",
+                "description": "The localized text value"
+              }
+            },
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "description": "Array of localized text values for multiple languages"
+        }
+      ]
+    }
+  }
+}

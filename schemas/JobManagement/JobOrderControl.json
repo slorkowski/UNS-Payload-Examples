@@ -1,0 +1,274 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://opcfoundation.org/UA/Machinery/Jobs/JobOrderControl.schema.json",
+  "title": "JobOrderControl",
+  "description": "OPC UA Machinery Job Management — JobOrderControl object. Instance of ISA-95 ISA95JobOrderReceiverObjectType (ns=2;i=1002). Exposes the job queue, available resources, and job lifecycle methods.",
+  "type": "object",
+  "properties": {
+    "CurrentState": {
+      "type": "object",
+      "title": "CurrentState",
+      "description": "Current state of the job order state machine.",
+      "properties": {
+        "Value": {
+          "type": "string",
+          "description": "Localized display name of the current state."
+        },
+        "Id": {
+          "type": "string",
+          "description": "NodeId of the current state node."
+        }
+      }
+    },
+    "EquipmentID": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Defines a read-only set of Equipment Class IDs and Equipment IDs that may be specified in a job order."
+    },
+    "JobOrderList": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ISA95JobOrderAndStateDataType"
+      },
+      "description": "Defines a read-only list of job order information available from the server."
+    },
+    "MaterialClassID": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Defines a read-only set of Material Classes IDs that may be specified in a job order."
+    },
+    "MaterialDefinitionID": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Defines a read-only set of Material Classes IDs that may be specified in a job order."
+    },
+    "MaxDownloadableJobOrders": {
+      "type": "integer"
+    },
+    "PersonnelID": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Defines a read-only set of Personnel IDs and Person IDs that may be specified in a job order."
+    },
+    "PhysicalAssetID": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Defines a read-only set of Physical Asset Class IDs and Physical Asset IDs that may be specified in a job order."
+    },
+    "WorkMaster": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ISA95WorkMasterDataType"
+      },
+      "description": "Defines a read-only set of work master IDs that may be specified in a job order, and the read-only set of parameters that may be specified for a specific work master."
+    },
+    "Store": {
+      "type": "object",
+      "x-opcua-nodeclass": "Method",
+      "description": "Stores a job order on the server without starting it (ISA-95 inherited).",
+      "x-inputArguments": {
+        "JobOrder": {
+          "$ref": "#/definitions/ISA95JobOrderDataType",
+          "description": "The job order to store."
+        },
+        "Comment": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional comments."
+        }
+      },
+      "x-outputArguments": {
+        "ReturnStatus": {
+          "type": "integer",
+          "description": "Status code of the operation."
+        },
+        "CreationTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Time the job order was stored."
+        }
+      }
+    },
+    "StoreAndStart": {
+      "type": "object",
+      "x-opcua-nodeclass": "Method",
+      "description": "Stores and immediately starts a job order (ISA-95 inherited).",
+      "x-inputArguments": {
+        "JobOrder": {
+          "$ref": "#/definitions/ISA95JobOrderDataType",
+          "description": "The job order to store and start."
+        },
+        "Comment": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional comments."
+        }
+      },
+      "x-outputArguments": {
+        "ReturnStatus": {
+          "type": "integer",
+          "description": "Status code of the operation."
+        },
+        "CreationTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Time the job order was stored."
+        }
+      }
+    },
+    "Start": {
+      "type": "object",
+      "x-opcua-nodeclass": "Method",
+      "description": "Starts a previously stored job order (ISA-95 inherited).",
+      "x-inputArguments": {
+        "JobOrderID": {
+          "type": "string",
+          "description": "ID of the job order to start."
+        },
+        "Comment": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional comments."
+        }
+      },
+      "x-outputArguments": {
+        "ReturnStatus": {
+          "type": "integer",
+          "description": "Status code of the operation."
+        }
+      }
+    },
+    "Update": {
+      "type": "object",
+      "x-opcua-nodeclass": "Method",
+      "description": "Updates a stored or running job order (ISA-95 inherited).",
+      "x-inputArguments": {
+        "JobOrder": {
+          "$ref": "#/definitions/ISA95JobOrderDataType",
+          "description": "Updated job order data."
+        },
+        "Comment": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional comments."
+        }
+      },
+      "x-outputArguments": {
+        "ReturnStatus": {
+          "type": "integer",
+          "description": "Status code of the operation."
+        }
+      }
+    },
+    "Stop": {
+      "type": "object",
+      "x-opcua-nodeclass": "Method",
+      "description": "Stops a running job order (ISA-95 inherited).",
+      "x-inputArguments": {
+        "JobOrderID": {
+          "type": "string",
+          "description": "ID of the job order to stop."
+        },
+        "Comment": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional comments."
+        }
+      },
+      "x-outputArguments": {
+        "ReturnStatus": {
+          "type": "integer",
+          "description": "Status code of the operation."
+        }
+      }
+    },
+    "Abort": {
+      "type": "object",
+      "x-opcua-nodeclass": "Method",
+      "description": "Aborts a stored or running job order (ISA-95 inherited).",
+      "x-inputArguments": {
+        "JobOrderID": {
+          "type": "string",
+          "description": "ID of the job order to abort."
+        },
+        "Comment": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional comments."
+        }
+      },
+      "x-outputArguments": {
+        "ReturnStatus": {
+          "type": "integer",
+          "description": "Status code of the operation."
+        }
+      }
+    },
+    "Clear": {
+      "type": "object",
+      "x-opcua-nodeclass": "Method",
+      "description": "Clears (removes) a stored job order that has not yet started (ISA-95 inherited).",
+      "x-inputArguments": {
+        "JobOrderID": {
+          "type": "string",
+          "description": "ID of the job order to clear."
+        },
+        "Comment": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional comments."
+        }
+      },
+      "x-outputArguments": {
+        "ReturnStatus": {
+          "type": "integer",
+          "description": "Status code of the operation."
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ISA95JobOrderAndStateDataType": {
+      "type": "object",
+      "title": "ISA95JobOrderAndStateDataType",
+      "description": "ISA95 job order with state info (ISA-95 V2). Full definition in ISA-95 JOBCONTROL V2 NodeSet.",
+      "x-external": true
+    },
+    "ISA95WorkMasterDataType": {
+      "type": "object",
+      "title": "ISA95WorkMasterDataType",
+      "description": "ISA95 work master with parameters (ISA-95 V2). Full definition in ISA-95 JOBCONTROL V2 NodeSet.",
+      "x-external": true
+    },
+    "ISA95JobOrderDataType": {
+      "type": "object",
+      "title": "ISA95JobOrderDataType",
+      "description": "ISA-95 job order payload — WorkMasterId, parameters, personnel, equipment, material, and scheduling info. Full definition in ISA-95 JOBCONTROL V2 NodeSet.",
+      "x-external": true
+    }
+  }
+}

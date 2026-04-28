@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opcfoundation.org/UA/Machinery/MonitoringProcess/v1.0",
+  "title": "OPC UA Monitoring Process",
+  "description": "JSON Schema for monitoring process based on OPC UA Machinery v1.04. Simplified for MQTT payload use.",
+  "type": "object",
+  "required": ["goodPartsCount", "scrapPartsCount", "productionTarget", "cycleTime"],
+  "properties": {
+    "goodPartsCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of good parts produced"
+    },
+    "scrapPartsCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of scrap parts produced"
+    },
+    "productionTarget": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Target production quantity"
+    },
+    "cycleTime": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Time taken for one production cycle"
+    },
+    "operator": {
+      "type": "string",
+      "description": "Who is operating the machine (e.g., operator ID or name)"
+    },
+    "strokesPerPart": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of strokes required to produce one part"
+    },
+    "strokesPerMinute": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Number of strokes performed per minute"
+    },
+    "dieTemperature": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Temperature of the die"
+    },
+    "totalDieStrokes": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Number of strokes on this die"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "localizedText": {
+      "description": "Text with optional locale information. Can be a simple string or an object with locale and text properties.",
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "required": ["text"],
+          "properties": {
+            "locale": {
+              "type": "string",
+              "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+              "description": "BCP 47 language tag (e.g., 'en', 'en-US', 'de-DE')"
+            },
+            "text": {
+              "type": "string",
+              "description": "The localized text value"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["text"],
+            "properties": {
+              "locale": {
+                "type": "string",
+                "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+                "description": "BCP 47 language tag (e.g., 'en', 'en-US', 'de-DE')"
+              },
+              "text": {
+                "type": "string",
+                "description": "The localized text value"
+              }
+            },
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "description": "Array of localized text values for multiple languages"
+        }
+      ]
+    }
+  }
+}
