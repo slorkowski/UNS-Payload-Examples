@@ -15,7 +15,7 @@ import json
 import time
 import random
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 import paho.mqtt.client as mqtt
 import logging
@@ -29,29 +29,30 @@ from jsonschema import validate, ValidationError
 load_dotenv()
 
 # MQTT Broker Configuration
-BROKER_ADDRESS = os.getenv("MQTT_BROKER_HOST")
-BROKER_PORT = int(os.getenv("MQTT_BROKER_PORT"))
-USERNAME = os.getenv("MQTT_BROKER_USERNAME")
-PASSWORD = os.getenv("MQTT_BROKER_PASSWORD")
-MQTT_CLIENT_ID = os.getenv("MQTT_CLIENT_ID")
-MQTT_KEEPALIVE = int(os.getenv("MQTT_KEEPALIVE"))
-MQTT_QOS = int(os.getenv("MQTT_QOS"))
+BROKER_ADDRESS = os.getenv("MQTT_BROKER_HOST", "localhost")
+BROKER_PORT = int(os.getenv("MQTT_BROKER_PORT", "1883"))
+USERNAME = os.getenv("MQTT_BROKER_USERNAME", "")
+PASSWORD = os.getenv("MQTT_BROKER_PASSWORD", "")
+MQTT_CLIENT_ID = os.getenv("MQTT_CLIENT_ID", "uns-payload-example")
+MQTT_KEEPALIVE = int(os.getenv("MQTT_KEEPALIVE", "60"))
+MQTT_QOS = int(os.getenv("MQTT_QOS", "1"))
 
 # MQTT Topic Configuration
-MQTT_BASE_TOPIC = os.getenv("MQTT_BASE_TOPIC")
-MQTT_TOPIC_PREFIX = os.getenv("MQTT_TOPIC_PREFIX")
+# MQTT Topic Configuration
+MQTT_BASE_TOPIC = os.getenv("MQTT_BASE_TOPIC", "acme/orange-county/stamping/press-line-4/can-press-1")
+MQTT_TOPIC_PREFIX = os.getenv("MQTT_TOPIC_PREFIX", "acme")
 
 # Asset Configuration
-PUMP_ID = int(os.getenv("ASSET_ID"))
-PUMP_NAME = os.getenv("ASSET_NAME")
-PUMP_DESCRIPTION = os.getenv("ASSET_DESCRIPTION")
+PUMP_ID = int(os.getenv("ASSET_ID", "201"))
+PUMP_NAME = os.getenv("ASSET_NAME", "can-press-1")
+PUMP_DESCRIPTION = os.getenv("ASSET_DESCRIPTION", "Can press for stamping operations")
 PARENT_ASSET_ID = 22
-PARENT_ASSET_NAME = "Hood Press"
+PARENT_ASSET_NAME = "Press Line 4"
 
 # Publisher Configuration
-PUBLISH_INTERVAL = int(os.getenv("PUBLISH_INTERVAL"))
-ENABLE_RANDOM_VARIATION = os.getenv("SIMULATION_MODE")
-LOG_LEVEL = os.getenv("LOG_LEVEL")
+PUBLISH_INTERVAL = int(os.getenv("PUBLISH_INTERVAL", "30"))
+ENABLE_RANDOM_VARIATION = os.getenv("SIMULATION_MODE", "true").lower() == "true"
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 # Optional: TLS/SSL Configuration
 MQTT_USE_TLS = os.getenv("MQTT_USE_TLS", "false").lower() == "true"
@@ -224,44 +225,103 @@ def create_equipment_payload():
     }
 
 def create_monitoring_process_payload():
-    good_parts_count = random.randint(1,2)
-    scrap_parts_count = random.randint(0,1)
-    total_die_strokes = random.randint(3, 10)
+# Each shift starts at a reset hour and runs until the next reset
+    shifts = {
+        6:  "Alice",   # 6am shift
+        14: "Bob",     # 2pm shift
+        22: "Ollie",   # 10pm shift
+    }
+    reset_hours = sorted(shifts)
+    ramp_min, ramp_max = 0.0, 100.0
+
+    def cycle_bounds(now):
+        resets = sorted(
+            now.replace(hour=h, minute=0, second=0, microsecond=0)
+            for h in reset_hours
+        )
+        start = max((r for r in resets if r <= now), default=None)
+        if start is None:
+            start = resets[-1] - timedelta(days=1)
+        end = min((r for r in resets if r > now), default=None)
+        if end is None:
+            end = resets[0] + timedelta(days=1)
+        return start, end
+
+    now = datetime.now()
+    start, end = cycle_bounds(now)
+    operator = shifts[start.hour]
+    frac = (now - start).total_seconds() / (end - start).total_seconds()
+    value = ramp_min + (ramp_max - ramp_min) * frac
+    good_parts_count = value
+    scrap_parts_count = value * 0.08  # Assume 8% scrap rate
+    total_die_strokes = value * 2.2  # Assume 2 strokes per part
 
     return {
-        "goodPartsCount":  good_parts_count,
-        "scrapPartsCount": scrap_parts_count,
-        "productionTarget": 500,
-        "cycleTime": random.uniform(25, 32),
-        "strokesPerMinute": random.uniform(4, 6),
+        "goodPartsCount":  round(good_parts_count),
+        "scrapPartsCount": round(scrap_parts_count),
+        "productionTarget": 480,
+        "cycleTime": random.uniform(27, 32),
+        "strokesPerMinute": random.uniform(2, 4),
         "strokesPerPart": 2,
         "dieTemperature": random.uniform(100, 125),
-        "totalDieStrokes": total_die_strokes,
-        "operator": "Ollie"
+        "totalDieStrokes": round(total_die_strokes),
+        "operator": operator
     }
 
 def create_machinery_item_state_payload():
+    ERROR_1_PROB = 0.02   # 2% chance per loop to trip - Short Feed Error
+    ERROR_2_PROB = 0.05   # 5% chance per loop to trip - Buckle Detection Error
+    FAULT_DURATION = 49.3 # seconds an error stays active once tripped
 
+    # Timestamp when each error will clear; None means currently inactive
+    error_1_until = None
+    error_2_until = None
+
+    def update_error(active_until, prob, now):
+        # If currently latched, stay True until the timer expires
+        if active_until is not None:
+            if now < active_until:
+                return True, active_until
+            active_until = None  # timer expired → clear
+        # Not latched: roll to see if it trips now
+        if random.random() < prob:
+            return True, now + FAULT_DURATION
+        return False, None
+
+    now = time.monotonic()
+    error_1, error_1_until = update_error(error_1_until, ERROR_1_PROB, now)
+    error_2, error_2_until = update_error(error_2_until, ERROR_2_PROB, now)
+
+    faulted = error_1 or error_2
+    state = "FAULTED" if faulted else "EXECUTING"
+
+    active = []
+    if error_1: active.append("ERR1")
+    if error_2: active.append("ERR2")
+    detail = ",".join(active) if active else "-"
+    #print(f"{state:8}  errors: {detail}")
+   
     return {
-        "currentState":  "Executing" 
+        "currentState":  state,
+        "MaterialShortFeed": 1 if error_1 else 0,
+        "MaterialBuckleDetected": 1 if error_2 else 0,
+        "FaultCode": 1 if error_1 else (2 if error_2 else 0),
+        "FaultDescription": "Material Short Feed" if error_1 else ("Material Buckle Detected" if error_2 else 0),
+        "operationMode": "MANUAL" if faulted else "AUTOMATIC"
     }
 
 def create_operation_mode_payload():
-
-    return {
-        "currentState":  "Processing" 
+   #faulted = create_machinery_item_state_payload()["currentState"] == "FAULTED"
+   return {
+   #     "currentState": "MANUAL" if faulted else "AUTOMATIC"
     }
 
 def create_energy_management_consumption_payload():
-    good_parts_count = random.randint(1,2)
-    scrap_parts_count = random.randint(0,1)
-    total_die_strokes = random.randint(3, 10)
-
     return {
         "applicationTag": "PM001",
         "resource": 1,
         "accuracyClass": 2,
-        "measurementValue": random.uniform(15.0, 25.0),
+        "measurementValue": random.uniform(17.3, 22.4),
         "unit": "kWh"
     }
 
@@ -275,7 +335,7 @@ def create_sensor_payload():
 		    "type": 22,
 		    "node_id": 1,
 		    "rssi": 28,
-		    "Temperature":  random.uniform(97.6, 99.5)
+		    "Temperature":  random.uniform(99.6, 113.3)
 		  }
 }
 
@@ -290,7 +350,7 @@ SCHEMA_PAYLOADS = {
     "MachineryEquipment": ("Machinery Equipment", create_equipment_payload),
     "MonitoringProcess": ("Monitoring Process data", create_monitoring_process_payload),
     "MachineryItemState": ("Monitoring Status State", create_machinery_item_state_payload),
-    "OperationMode": ("Monitoring Status Mode", create_operation_mode_payload),
+    #"OperationMode": ("Monitoring Status Mode", create_operation_mode_payload),
     "EnergyManagementConsumption": ("Energy Management Consumption", create_energy_management_consumption_payload),  # Reusing monitoring process for energy consumption example
     "sensor": ("Sensor data", create_sensor_payload)
 }
@@ -318,7 +378,7 @@ def publish_pump_data():
         client.tls_set()
     
     # Create base topic
-    base_topic = MQTT_BASE_TOPIC.replace("pump-101", PUMP_NAME.lower())
+    base_topic = MQTT_BASE_TOPIC
     
     try:
         # Connect to broker
