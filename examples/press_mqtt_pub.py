@@ -269,8 +269,8 @@ def create_monitoring_process_payload():
     }
 
 def create_machinery_item_state_payload():
-    ERROR_1_PROB = 0.02   # 2% chance per loop to trip - Short Feed Error
-    ERROR_2_PROB = 0.02   # 3% chance per loop to trip - Buckle Detection Error
+    ERROR_1_PROB = 0.01   # 1% chance per loop to trip - Short Feed Error
+    ERROR_2_PROB = 0.01   # 1% chance per loop to trip - Buckle Detection Error
     FAULT_DURATION = 49.3 # seconds an error stays active once tripped
 
     # Timestamp when each error will clear; None means currently inactive
@@ -306,7 +306,7 @@ def create_machinery_item_state_payload():
         "MaterialShortFeed": 1 if error_1 else 0,
         "MaterialBuckleDetected": 1 if error_2 else 0,
         "FaultCode": 1 if error_1 else (2 if error_2 else 0),
-        "FaultDescription": "Material Short Feed" if error_1 else ("Material Buckle Detected" if error_2 else 0),
+        "FaultDescription": "Material Short Feed" if error_1 else ("Material Buckle Detected" if error_2 else " No Faults"),
         "operationMode": "MANUAL" if faulted else "AUTOMATIC"
     }
 
