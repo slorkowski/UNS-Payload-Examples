@@ -270,7 +270,7 @@ def create_monitoring_process_payload():
 
 def create_machinery_item_state_payload():
     ERROR_1_PROB = 0.02   # 2% chance per loop to trip - Short Feed Error
-    ERROR_2_PROB = 0.05   # 5% chance per loop to trip - Buckle Detection Error
+    ERROR_2_PROB = 0.02   # 3% chance per loop to trip - Buckle Detection Error
     FAULT_DURATION = 49.3 # seconds an error stays active once tripped
 
     # Timestamp when each error will clear; None means currently inactive
